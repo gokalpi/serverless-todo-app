@@ -16,6 +16,8 @@ provider:
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     USERID_TODOID_INDEX: UserIdTodoIdIndex
+    IMAGES_S3_BUCKET: serverless-todo-images-gokalpi-${self:provider.stage}
+    SIGNED_URL_EXPIRATION: 300
 
   iamRoleStatements:
     - Effect: Allow
