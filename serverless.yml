@@ -39,6 +39,9 @@ custom:
 
 functions:
 
+  Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
+
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
     events:
@@ -46,6 +49,7 @@ functions:
           method: post
           path: todos
           cors: true
+          authorizer: Auth
           reqValidatorName: RequestBodyValidator
           documentation:
             summary: Create a new todo
