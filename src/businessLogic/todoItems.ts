@@ -1,30 +1,80 @@
-import * as uuid from 'uuid'
+import * as uuid from "uuid";
 
-import { TodoItem } from '../models/TodoItem'
-import { TodoItemAccess } from '../dataLayer/todoItemsAccess'
-import { parseUserId } from '../auth/utils'
-import { CreateTodoRequest } from '../requests/CreateTodoRequest'
+import { TodoItem } from "../models/TodoItem";
+import { TodoItemAccess } from "../dataLayer/todoItemsAccess";
+import { CreateTodoRequest } from "../requests/CreateTodoRequest";
+import { UpdateTodoRequest } from "../requests/UpdateTodoRequest";
+import { getSignedUrl, getAttachmentUrl } from "../utils/s3Utils";
 
-const todoItemAccess = new TodoItemAccess()
-const bucketName = process.env.IMAGES_S3_BUCKET
+const todoItemAccess = new TodoItemAccess();
+
+export async function getTodoItem(
+  userId: string,
+  todoId: string
+): Promise<TodoItem> {
+  if (!userId) throw new Error("No userId found");
+  if (!todoId) throw new Error("No todoId found");
+
+  return await todoItemAccess.getTodoItem(userId, todoId);
+}
+
+export async function getTodoItems(userId: string) {
+  if (!userId) throw new Error("No userId found");
+
+  return await todoItemAccess.getTodoItems(userId);
+}
 
 export async function createTodoItem(
   createTodoItemRequest: CreateTodoRequest,
-  jwtToken: string
+  userId: string
 ): Promise<TodoItem> {
-  if (!jwtToken)
-    throw new Error('No token found')
+  if (!userId) throw new Error("No userId found");
 
-  const todoId = uuid.v4()
-  const userId = parseUserId(jwtToken)
-
-  return await todoItemAccess.createTodoItem({
+  const newTodo = {
     userId: userId,
-    todoId: todoId,
+    todoId: uuid.v4(),
     createdAt: new Date().toISOString(),
-    name: createTodoItemRequest.name,
-    dueDate: createTodoItemRequest.dueDate,
-    done: false,
-    attachmentUrl: `https://${bucketName}.s3.amazonaws.com/${todoId}`
-  })
+    ...createTodoItemRequest,
+    done: false
+  };
+
+  await todoItemAccess.createTodoItem(newTodo);
+
+  return newTodo;
+}
+
+export async function updateTodoItem(
+  updateTodoItemRequest: UpdateTodoRequest,
+  userId: string,
+  todoId: string
+) {
+  if (!userId) throw new Error("No userId found");
+  if (!todoId) throw new Error("No todoId found");
+
+  await todoItemAccess.updateTodoItem(userId, todoId, updateTodoItemRequest);
+}
+
+export async function deleteTodoItem(userId: string, todoId: string) {
+  if (!userId) throw new Error("No userId found");
+  if (!todoId) throw new Error("No todoId found");
+
+  await todoItemAccess.deleteTodoItem(userId, todoId);
+}
+
+export async function generateAttachmentUrl(userId: string, todoId: string) {
+  if (!userId) throw new Error("No userId found");
+  if (!todoId) throw new Error("No todoId found");
+
+  const signedUrl = await getSignedUrl(todoId);
+  console.log('Signed URL', signedUrl)
+  const downloadUrl = await getAttachmentUrl(todoId);
+  console.log('Download URL', downloadUrl)
+
+  await todoItemAccess.updateAttachmentUrl(
+    userId,
+    todoId,
+    downloadUrl
+  );
+
+  return signedUrl;
 }

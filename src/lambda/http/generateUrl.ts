@@ -3,22 +3,25 @@ import "source-map-support/register";
 import * as middy from "middy";
 import { cors } from "middy/middlewares";
 
-import { CreateTodoRequest } from "../../requests/CreateTodoRequest";
-import { createTodoItem } from "../../businessLogic/todoItems";
 import { getUserId } from "../../auth/utils";
+import { generateAttachmentUrl } from "../../businessLogic/todoItems";
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log("Creating todo", event);
+    console.log("Generating Upload URL for todo", event);
 
-    const newTodo: CreateTodoRequest = JSON.parse(event.body);
     const userId = getUserId(event);
-    const newItem = await createTodoItem(newTodo, userId);
+    const todoId = event.pathParameters.todoId;
+
+    // Return a presigned URL to upload a file for a TODO item with the provided id
+    const uploadUrl = await generateAttachmentUrl(userId, todoId);
+
+    console.log('uploadUrl', uploadUrl)
 
     return {
-      statusCode: 201,
+      statusCode: 200,
       body: JSON.stringify({
-        item: newItem
+        uploadUrl
       })
     };
   }

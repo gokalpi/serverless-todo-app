@@ -101,7 +101,7 @@ It should return an empty body.
 
 It should return an empty body.
 
-* `GenerateUploadUrl` - returns a pre-signed URL that can be used to upload an attachment file for a TODO item.
+* `generateUrl` - returns a pre-signed URL that can be used to upload an attachment file for a TODO item.
 
 It should return a JSON object that looks like this:
 
