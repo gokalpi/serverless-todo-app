@@ -3,22 +3,20 @@ import "source-map-support/register";
 import * as middy from "middy";
 import { cors } from "middy/middlewares";
 
-import { CreateTodoRequest } from "../../requests/CreateTodoRequest";
-import { createTodoItem } from "../../businessLogic/todoItems";
 import { getUserId } from "../../auth/utils";
+import { getTodoItems } from "../../businessLogic/todoItems";
 
 export const handler = middy(
   async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    console.log("Creating todo", event);
+    console.log("Getting todos of user id", event);
 
-    const newTodo: CreateTodoRequest = JSON.parse(event.body);
     const userId = getUserId(event);
-    const newItem = await createTodoItem(newTodo, userId);
+    const todoItems = await getTodoItems(userId);
 
     return {
-      statusCode: 201,
+      statusCode: 200,
       body: JSON.stringify({
-        item: newItem
+        items: todoItems
       })
     };
   }
